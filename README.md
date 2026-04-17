@@ -66,8 +66,11 @@ python chat.py
 
 ## Usage
 
+The chatbot remembers everything you say within a session — ask follow-up questions naturally without repeating context.
+
 ```
 Tu: O que é uma abordagem integrada em nutrição?
+Tu: Como se aplica isso à diabetes?         ← follow-up, context is remembered
 Tu: flashcards sobre o Módulo 8 Tema 1
 Tu: exame sobre inovação digital em nutrição
 Tu: ajuda
@@ -81,8 +84,10 @@ Tu: sair
 | `flashcards sobre [tema]` | Generates Q&A flashcards |
 | `exame sobre [tema]` | Generates practice exam questions |
 | `ajuda` / `help` | Show help |
-| `limpar` / `clear` | Clear conversation history |
+| `limpar` / `clear` | Clear conversation history (start fresh) |
 | `sair` / `exit` / `quit` | Exit |
+
+> Session history is kept in memory only — it is not saved to disk and does not carry over to the next run. History is automatically trimmed to the last 20 exchanges to stay within model limits.
 
 ## Project Structure
 

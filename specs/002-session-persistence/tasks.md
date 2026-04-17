@@ -16,7 +16,7 @@
 
 **Purpose**: No setup needed — feature is already implemented. Confirm environment is working.
 
-- [ ] T001 Verify venv is active and dependencies installed: `source venv/bin/activate && pip install -r requirements.txt`
+- [X] T001 Verify venv is active and dependencies installed: `source venv/bin/activate && pip install -r requirements.txt`
 
 ---
 
@@ -24,9 +24,9 @@
 
 **Purpose**: Confirm the existing history mechanism is wired correctly end-to-end before verifying individual stories.
 
-- [ ] T002 Verify `get_reply()` signature accepts `history` param in `src/agents.py` and passes it to LLM via `messages.extend(history)`
-- [ ] T003 [P] Verify `history = []` is initialised at session start in `chat.py` (line ~122)
-- [ ] T004 [P] Verify `history.append()` calls exist after successful LLM reply in `chat.py`
+- [X] T002 Verify `get_reply()` signature accepts `history` param in `src/agents.py` and passes it to LLM via `messages.extend(history)`
+- [X] T003 [P] Verify `history = []` is initialised at session start in `chat.py` (line ~122)
+- [X] T004 [P] Verify `history.append()` calls exist after successful LLM reply in `chat.py`
 
 **Checkpoint**: Core wiring confirmed — all story verifications can proceed
 
@@ -40,9 +40,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Verify `messages.extend(history)` in `src/agents.py` — history is prepended before current user message on every LLM call
-- [ ] T006 [US1] Verify history grows correctly: after each successful exchange, both `{"role": "user"}` and `{"role": "assistant"}` entries are appended in `chat.py`
-- [ ] T007 [US1] Manual test: run `python chat.py`, hold a 3-message conversation where message 3 references message 1 — confirm coherent response
+- [X] T005 [US1] Verify `messages.extend(history)` in `src/agents.py` — history is prepended before current user message on every LLM call
+- [X] T006 [US1] Verify history grows correctly: after each successful exchange, both `{"role": "user"}` and `{"role": "assistant"}` entries are appended in `chat.py`
+- [X] T007 [US1] Manual test: run `python chat.py`, hold a 3-message conversation where message 3 references message 1 — confirm coherent response
 
 **Checkpoint**: US1 verified — multi-turn context working
 
@@ -56,9 +56,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Verify `detect_mode()` in `src/agents.py` only affects `system_prompt` selection — the `history` list in `chat.py:main()` is never reset or passed to `detect_mode()`
-- [ ] T009 [US2] Verify no `history.clear()` or `history = []` call anywhere in the message-processing loop except the explicit `limpar`/`clear` branch in `chat.py`
-- [ ] T010 [US2] Manual test: ask a question in tutor mode, then switch to flashcard mode — confirm prior conversation context is retained
+- [X] T008 [US2] Verify `detect_mode()` in `src/agents.py` only affects `system_prompt` selection — the `history` list in `chat.py:main()` is never reset or passed to `detect_mode()`
+- [X] T009 [US2] Verify no `history.clear()` or `history = []` call anywhere in the message-processing loop except the explicit `limpar`/`clear` branch in `chat.py`
+- [X] T010 [US2] Manual test: ask a question in tutor mode, then switch to flashcard mode — confirm prior conversation context is retained
 
 **Checkpoint**: US2 verified — mode switching keeps history intact
 
@@ -72,9 +72,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Verify `history.clear()` is called when user types `limpar` or `clear` in `chat.py`
-- [ ] T012 [US3] Verify a confirmation message is printed after clear (e.g., "Histórico limpo.")
-- [ ] T013 [US3] Manual test: hold a conversation, run `limpar`, confirm next reply has no prior context
+- [X] T011 [US3] Verify `history.clear()` is called when user types `limpar` or `clear` in `chat.py`
+- [X] T012 [US3] Verify a confirmation message is printed after clear (e.g., "Histórico limpo.")
+- [X] T013 [US3] Manual test: hold a conversation, run `limpar`, confirm next reply has no prior context
 
 **Checkpoint**: US3 verified — on-demand reset working
 
@@ -84,11 +84,11 @@
 
 **Purpose**: Trim behaviour, branch closure, and push to remote.
 
-- [ ] T014 [P] Verify trim logic: `history = history[-40:]` fires when `len(history) > 40` in `chat.py` — oldest messages dropped, newest retained
-- [ ] T015 [P] Verify no disk writes anywhere in `chat.py` or `src/` related to history (grep for `open(`, `json.dump`, `pickle`)
-- [ ] T016 Commit all spec artifacts: `git add -A && git commit -m "feat: session persistence verified and documented"`
-- [ ] T017 Push branch: `git push origin 002-session-persistence`
-- [ ] T018 [P] Update `README.md` if needed to mention multi-turn conversation support
+- [X] T014 [P] Verify trim logic: `history = history[-40:]` fires when `len(history) > 40` in `chat.py` — oldest messages dropped, newest retained
+- [X] T015 [P] Verify no disk writes anywhere in `chat.py` or `src/` related to history (grep for `open(`, `json.dump`, `pickle`)
+- [X] T016 Commit all spec artifacts: `git add -A && git commit -m "feat: session persistence verified and documented"`
+- [X] T017 Push branch: `git push origin 002-session-persistence`
+- [X] T018 [P] Update `README.md` if needed to mention multi-turn conversation support
 
 ---
 
