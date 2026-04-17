@@ -1,4 +1,4 @@
-# Research: Nutrition Chatbot Web UI
+# Research: Conversation Persistence within a Session: Nutrition Chatbot Web UI
 
 **Feature**: 001-nutrition-chatbot-ui  
 **Date**: 2026-04-17

@@ -2,7 +2,7 @@ import re
 
 from openai import OpenAI
 
-from src.prompts import get_system_prompt
+from src.prompts import get_session_prompt, get_system_prompt
 
 # Keyword patterns for intent detection
 _FLASHCARD_PATTERN = re.compile(
@@ -24,7 +24,7 @@ def detect_mode(message):
     return "tutor"
 
 
-def get_reply(message, history, knowledge_text, api_key, base_url=None, model="gpt-4o-mini"):
+def get_reply(message, history, knowledge_text, api_key, base_url=None, model="gpt-4o-mini", system_prompt=None):
     """Process a user message and return the LLM reply and detected mode.
 
     Args:
@@ -34,12 +34,15 @@ def get_reply(message, history, knowledge_text, api_key, base_url=None, model="g
         api_key: OpenAI API key.
         base_url: Optional alternative API base URL.
         model: Model name to use.
+        system_prompt: Optional system prompt override. If None, uses the unified
+                       session prompt for full conversational context continuity.
 
     Returns:
         (reply_text, mode) tuple.
     """
     mode = detect_mode(message)
-    system_prompt = get_system_prompt(mode, knowledge_text)
+    if system_prompt is None:
+        system_prompt = get_session_prompt(knowledge_text)
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history)

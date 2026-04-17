@@ -30,10 +30,12 @@ load_dotenv()
 
 from src.knowledge import build_knowledge_text, extract_modules  # noqa: E402
 from src.agents import get_reply  # noqa: E402
+from src.prompts import get_session_prompt  # noqa: E402
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") or None
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MAX_HISTORY = int(os.getenv("MAX_HISTORY", "60"))
 
 WIDTH = 80  # wrap width for bot replies
 
@@ -120,6 +122,7 @@ def main():
     knowledge_text = build_knowledge_text(modules)
     print_header(modules)
 
+    session_prompt = get_session_prompt(knowledge_text)
     history = []  # [{role: user|assistant, content: str}, ...]
 
     while True:
@@ -144,7 +147,7 @@ def main():
 
         if lower in ("limpar", "clear"):
             history.clear()
-            print(f"{DIM}  Histórico limpo.{RESET}\n")
+            print(f"{DIM}  Histórico limpo. ({MAX_HISTORY} mensagens máx){RESET}\n")
             continue
 
         print(f"{DIM}  A processar...{RESET}", end="\r")
@@ -157,6 +160,7 @@ def main():
                 api_key=OPENAI_API_KEY,
                 base_url=OPENAI_BASE_URL,
                 model=OPENAI_MODEL,
+                system_prompt=session_prompt,
             )
         except Exception as e:
             err = str(e)
@@ -176,9 +180,9 @@ def main():
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": reply})
 
-        # Trim to last 20 exchanges (40 messages) to avoid context overflow
-        if len(history) > 40:
-            history = history[-40:]
+        # Trim to last MAX_HISTORY messages to avoid context overflow
+        if len(history) > MAX_HISTORY:
+            history = history[-MAX_HISTORY:]
 
         print_bot(reply, mode)
 

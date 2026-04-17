@@ -1,34 +1,26 @@
-# Implementation Plan: Nutrition Chatbot Web UI
+# Implementation Plan: Conversation Persistence within a Session
 
-**Branch**: `001-nutrition-chatbot-ui` | **Date**: 2026-04-17 | **Spec**: [specs/001-nutrition-chatbot-ui/spec.md](spec.md)
-**Input**: Feature specification from `/specs/001-nutrition-chatbot-ui/spec.md`
+**Branch**: `001-nutrition-chatbot-ui` | **Date**: 2026-04-17 | **Spec**: specs/001-nutrition-chatbot-ui/spec.md
 
 ## Summary
 
-Build a web-accessible chatbot UI that lets nutrition students ask questions, generate flashcards, and practice exam questions — all grounded in course PowerPoint content. The backend uses Python/Flask with an OpenAI-compatible LLM API to process queries against extracted PDF text. The frontend is a single-page vanilla HTML/CSS/JS chat interface served by Flask.
+Add full conversational context to the terminal chatbot so follow-up questions within a session are understood without repeating context. The main changes are: (1) replace per-message system-prompt switching with a single unified session system prompt, and (2) raise the history trim ceiling from 40 to a configurable `MAX_HISTORY` (default 60).
 
 ## Technical Context
 
-**Language/Version**: Python 3.11+  
-**Primary Dependencies**: Flask 3.x, openai (Python SDK), PyMuPDF (pymupdf), python-dotenv  
-**Storage**: In-memory (Python dicts) — no database required  
-**Testing**: pytest + Flask test client  
-**Target Platform**: Linux/macOS/Windows server, accessed via web browser  
-**Project Type**: web-service (single-process Flask app serving API + static frontend)  
-**Performance Goals**: <15s response time per question (LLM-bound), single-user/low-concurrency  
-**Constraints**: Must fit course content in LLM context window (~128k tokens); no GPU required  
-**Scale/Scope**: 1-5 concurrent users, 7 PDF source files, 1 HTML page, ~10 source files
+**Language/Version**: Python 3.10+  
+**Primary Dependencies**: openai>=1.0, PyMuPDF, python-dotenv, colorama  
+**Storage**: In-memory list (no disk persistence — session only)  
+**Testing**: Manual smoke test via `python chat.py`  
+**Target Platform**: Linux / macOS / Windows terminal  
+**Project Type**: CLI  
+**Performance Goals**: No regression in response time  
+**Constraints**: Must stay within llama3.2 / gpt-4o-mini context window  
+**Scale/Scope**: Single-user terminal session
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
-Constitution is not customized (blank template). No specific gates to enforce. Proceeding with default best practices:
-- ✅ Keep it simple (single Flask process, no unnecessary abstractions)
-- ✅ Test-first approach (pytest for all backend logic)
-- ✅ No over-engineering (in-memory storage, vanilla frontend)
-
-**Post-Phase 1 re-check**: ✅ Design remains simple. Single project structure, no database, no build tools, no framework overhead. All decisions align with simplicity principles.
+No project constitution defined — no gates to evaluate.
 
 ## Project Structure
 
@@ -36,42 +28,152 @@ Constitution is not customized (blank template). No specific gates to enforce. P
 
 ```text
 specs/001-nutrition-chatbot-ui/
-├── plan.md              # This file
-├── research.md          # Phase 0: Technology decisions and rationale
-├── data-model.md        # Phase 1: Entity definitions and relationships
-├── quickstart.md        # Phase 1: Setup and run instructions
-├── contracts/
-│   └── api.md           # Phase 1: HTTP API contract
-└── tasks.md             # Phase 2 output (/speckit.tasks command)
+├── plan.md              ← This file
+├── research.md          ← Phase 0 output
+├── data-model.md        ← Phase 1 output
+└── tasks.md             ← Phase 2 output
+```
+
+### Source Code changes
+
+```text
+src/prompts.py     ← Add SESSION_SYSTEM_PROMPT (unified)
+src/agents.py      ← Accept system_prompt param; default to unified prompt
+chat.py            ← Use unified prompt; raise MAX_HISTORY; show turn count
+```
+
+## Phase 0: Research findings
+
+See research.md. Key decisions:
+
+1. **Single unified system prompt** — system prompt stays constant for the whole session; `detect_mode()` runs for the UI label only  
+2. **MAX_HISTORY = 60** (default) — configurable via `.env`; keeps last 30 exchanges  
+3. **No file persistence** — "durante uma sessão" scope only
+
+## Phase 1: Design
+
+### data-model.md
+
+No new entities. The `history` list already models the conversation:
+
+```python
+history: list[dict]  # [{"role": "user"|"assistant", "content": str}, ...]
+```
+
+Trim policy: keep `history[-MAX_HISTORY:]` where `MAX_HISTORY` is read from env (default 60).
+
+### Unified system prompt design
+
+`SESSION_SYSTEM_PROMPT` in `src/prompts.py`:
+- Combines tutor + flashcard + exam instructions into one prompt
+- LLM selects the appropriate response style based on the user's message naturally
+- Keeps `{knowledge}` placeholder filled with course content
+
+### contracts/
+
+No external API contract changes. The `get_reply()` signature gains one optional parameter:
+
+```python
+get_reply(message, history, knowledge_text, api_key, base_url=None, model=..., system_prompt=None)
+```
+
+When `system_prompt` is `None`, uses `SESSION_SYSTEM_PROMPT`. This is backwards-compatible.
+
+
+## Summary
+
+[Extract from feature spec: primary requirement + technical approach from research]
+
+## Technical Context
+
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+[Gates determined based on constitution file]
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-app.py                   # Flask application entry point
-requirements.txt         # Python dependencies
-.env.example             # Environment variable template
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── __init__.py
-├── knowledge.py         # PDF extraction and course content loading
-├── agents.py            # LLM agent routing (tutor, flashcard, exam)
-├── sessions.py          # In-memory session management with TTL
-└── prompts.py           # System prompts for each agent mode
-static/
-├── style.css            # Chat UI responsive styles
-└── app.js               # Chat UI client-side logic
-templates/
-└── index.html           # Chat page template (Jinja2)
+├── models/
+├── services/
+├── cli/
+└── lib/
+
 tests/
-├── __init__.py
-├── test_knowledge.py    # PDF extraction tests
-├── test_agents.py       # Agent routing tests
-├── test_sessions.py     # Session management tests
-└── test_api.py          # API endpoint integration tests
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Single-project structure. Flask serves both the API and the frontend from one process. No separate frontend build step. The `src/` directory contains all backend Python modules. `static/` and `templates/` are Flask convention directories for frontend assets. This is the simplest possible structure for a Python web application.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
-No constitution violations. No complexity justifications needed.
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
