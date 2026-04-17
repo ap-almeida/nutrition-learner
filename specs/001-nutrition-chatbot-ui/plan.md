@@ -1,84 +1,9 @@
-# Implementation Plan: Conversation Persistence within a Session
+# Implementation Plan: [FEATURE]
 
-**Branch**: `001-nutrition-chatbot-ui` | **Date**: 2026-04-17 | **Spec**: specs/001-nutrition-chatbot-ui/spec.md
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-## Summary
-
-Add full conversational context to the terminal chatbot so follow-up questions within a session are understood without repeating context. The main changes are: (1) replace per-message system-prompt switching with a single unified session system prompt, and (2) raise the history trim ceiling from 40 to a configurable `MAX_HISTORY` (default 60).
-
-## Technical Context
-
-**Language/Version**: Python 3.10+  
-**Primary Dependencies**: openai>=1.0, PyMuPDF, python-dotenv, colorama  
-**Storage**: In-memory list (no disk persistence — session only)  
-**Testing**: Manual smoke test via `python chat.py`  
-**Target Platform**: Linux / macOS / Windows terminal  
-**Project Type**: CLI  
-**Performance Goals**: No regression in response time  
-**Constraints**: Must stay within llama3.2 / gpt-4o-mini context window  
-**Scale/Scope**: Single-user terminal session
-
-## Constitution Check
-
-No project constitution defined — no gates to evaluate.
-
-## Project Structure
-
-### Documentation (this feature)
-
-```text
-specs/001-nutrition-chatbot-ui/
-├── plan.md              ← This file
-├── research.md          ← Phase 0 output
-├── data-model.md        ← Phase 1 output
-└── tasks.md             ← Phase 2 output
-```
-
-### Source Code changes
-
-```text
-src/prompts.py     ← Add SESSION_SYSTEM_PROMPT (unified)
-src/agents.py      ← Accept system_prompt param; default to unified prompt
-chat.py            ← Use unified prompt; raise MAX_HISTORY; show turn count
-```
-
-## Phase 0: Research findings
-
-See research.md. Key decisions:
-
-1. **Single unified system prompt** — system prompt stays constant for the whole session; `detect_mode()` runs for the UI label only  
-2. **MAX_HISTORY = 60** (default) — configurable via `.env`; keeps last 30 exchanges  
-3. **No file persistence** — "durante uma sessão" scope only
-
-## Phase 1: Design
-
-### data-model.md
-
-No new entities. The `history` list already models the conversation:
-
-```python
-history: list[dict]  # [{"role": "user"|"assistant", "content": str}, ...]
-```
-
-Trim policy: keep `history[-MAX_HISTORY:]` where `MAX_HISTORY` is read from env (default 60).
-
-### Unified system prompt design
-
-`SESSION_SYSTEM_PROMPT` in `src/prompts.py`:
-- Combines tutor + flashcard + exam instructions into one prompt
-- LLM selects the appropriate response style based on the user's message naturally
-- Keeps `{knowledge}` placeholder filled with course content
-
-### contracts/
-
-No external API contract changes. The `get_reply()` signature gains one optional parameter:
-
-```python
-get_reply(message, history, knowledge_text, api_key, base_url=None, model=..., system_prompt=None)
-```
-
-When `system_prompt` is `None`, uses `SESSION_SYSTEM_PROMPT`. This is backwards-compatible.
-
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
